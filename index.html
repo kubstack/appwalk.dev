@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>appwalk — AI browser exploration, verified as Playwright tests</title>
+<meta name="description" content="appwalk lets an AI explore your web app and turns successful user journeys into verified Playwright regression tests.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: oklch(0.98 0.006 90);
+    --bg-alt: oklch(0.955 0.006 90);
+    --card: oklch(0.995 0.002 90);
+    --border: oklch(0.91 0.005 90);
+    --border-strong: oklch(0.88 0.005 90);
+    --text: oklch(0.18 0.01 90);
+    --text-secondary: oklch(0.42 0.01 90);
+    --text-muted: oklch(0.5 0.01 90);
+    --text-faint: oklch(0.62 0.01 90);
+    --accent: oklch(0.55 0.19 300);
+    --accent-contrast: oklch(0.99 0.005 300);
+    --green: oklch(0.5 0.15 150);
+    --dark: oklch(0.18 0.01 90);
+    --dark-text: oklch(0.98 0.005 90);
+    --dark-border: oklch(0.28 0.008 90);
+    --dark-muted: oklch(0.62 0.01 90);
+    --dark-faint: oklch(0.55 0.01 90);
+    --sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html { color-scheme: light; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--text); text-decoration: none; }
+  a:hover { color: var(--accent); }
+  h1, h2, p { margin: 0; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+
+  /* NAV */
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 40px; border-bottom: 1px solid var(--border);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; letter-spacing: -0.3px; }
+  .logo .dot { width: 10px; height: 10px; background: var(--accent); flex: none; }
+  .nav-links { display: flex; align-items: center; gap: 28px; }
+  .nav-link { display: flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 500; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px; border-radius: 8px; font-size: 14px; font-weight: 600;
+    border: none; cursor: pointer; font-family: var(--sans);
+  }
+  .btn-accent { background: var(--accent); color: var(--accent-contrast); }
+  .btn-accent:hover { background: oklch(0.5 0.19 300); color: var(--accent-contrast); }
+  .btn-dark { background: var(--dark); color: var(--dark-text); }
+  .btn-dark:hover { background: oklch(0.24 0.01 90); color: var(--dark-text); }
+  .nav .btn-accent { padding: 10px 20px; }
+
+  /* HERO */
+  .hero {
+    display: flex; flex-direction: column; align-items: center; gap: 24px;
+    padding: 100px 40px 96px; max-width: 720px; margin: 0 auto;
+  }
+  .hero-copy { display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 22px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    color: var(--accent); text-transform: uppercase;
+  }
+  .hero h1 { font-size: 56px; font-weight: 700; line-height: 1.1; }
+  .hero h1 mark { background: color-mix(in oklch, var(--accent) 28%, transparent); color: inherit; padding: 0 2px; }
+  .hero p.lead { font-size: 18px; line-height: 1.65; color: var(--text-secondary); max-width: 560px; }
+  .cmd-box {
+    display: flex; align-items: center; gap: 10px; background: oklch(0.94 0.005 90);
+    border-radius: 9px; padding: 5px 6px 5px 16px; max-width: 100%; overflow-x: auto;
+  }
+  .cmd-box code {
+    font-family: var(--mono); font-size: 13px; color: oklch(0.32 0.01 90); white-space: nowrap;
+  }
+  .copy-btn {
+    display: flex; align-items: center; gap: 6px; flex: none; border: none; cursor: pointer;
+    background: var(--dark); color: var(--dark-text); border-radius: 6px; padding: 9px 14px;
+    font-family: var(--sans); font-size: 13px; font-weight: 600;
+  }
+  .copy-btn:hover { background: oklch(0.24 0.01 90); }
+  .cta-note { font-size: 13px; color: var(--text-faint); }
+  .cta-note a { color: var(--text-faint); text-decoration: underline; }
+  .cta-note a:hover { color: var(--accent); }
+  .term {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    box-shadow: 0 30px 60px -30px rgba(0,0,0,0.18); overflow: hidden;
+  }
+  .term-body {
+    padding: 22px 24px; font-family: var(--mono); font-size: 14px; line-height: 1.85;
+    display: flex; flex-direction: column; gap: 2px; overflow-x: auto; white-space: nowrap;
+  }
+  .term-prompt { color: var(--accent); }
+  .term-dim { color: var(--text-faint); }
+  .term-ok { color: var(--green); }
+  .term-warn { color: oklch(0.55 0.14 80); }
+  .term-footer {
+    margin-top: 14px; padding-top: 14px; border-top: 1px solid oklch(0.93 0.005 90);
+    color: var(--text-faint); font-size: 12px;
+  }
+  .term-titlebar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .term-dots { display: flex; gap: 8px; }
+  .term-dots span { width: 9px; height: 9px; border-radius: 50%; display: block; }
+
+  /* SECTION HEADERS */
+  .section { padding: 88px 40px; }
+  .section-alt { background: var(--bg-alt); }
+  .section-head { text-align: center; max-width: 720px; margin: 0 auto 48px; }
+  .section-head h2 { font-size: 36px; font-weight: 700; margin-top: 14px; }
+
+  /* HOW IT WORKS */
+  .flow {
+    display: flex; align-items: flex-start; justify-content: center; gap: 24px;
+    max-width: 1160px; margin: 0 auto; flex-wrap: wrap;
+  }
+  .flow-step { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 220px; text-align: center; }
+  .flow-icon {
+    width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: var(--card); border: 1px solid var(--border-strong); color: var(--accent); flex: none;
+  }
+  .flow-icon.done { background: color-mix(in oklch, var(--green) 20%, white); border-color: transparent; color: oklch(0.4 0.12 150); }
+  .flow-step h3 { font-size: 17px; font-weight: 600; }
+  .flow-step p { font-size: 14px; line-height: 1.55; color: var(--text-muted); }
+  .flow-arrow { color: oklch(0.6 0.01 90); flex: none; margin-top: 24px; }
+
+  /* WHY */
+  .benefits {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 36px;
+    max-width: 1180px; margin: 0 auto;
+  }
+  .benefit { display: flex; flex-direction: column; gap: 12px; width: 200px; text-align: left; }
+  .benefit svg { color: var(--accent); }
+  .benefit h3 { font-size: 16px; font-weight: 600; }
+  .benefit p { font-size: 14px; line-height: 1.55; color: var(--text-muted); }
+
+  /* PERSONAS */
+  .persona-legend { display: flex; justify-content: center; gap: 28px; margin-bottom: 32px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
+  .legend-item .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .dot-journey { background: var(--accent); }
+  .dot-challenge { background: oklch(0.62 0.15 55); }
+  .persona-strip-wrap { position: relative; max-width: 1160px; margin: 0 auto; }
+  .persona-strip-wrap::after {
+    content: ""; position: absolute; top: 0; right: 0; bottom: 12px; width: 32px; pointer-events: none; z-index: 1;
+    background: linear-gradient(270deg, var(--bg-alt), transparent);
+  }
+  .persona-strip-wrap.scrolled-end::after { opacity: 0; }
+  .persona-strip {
+    display: flex; gap: 12px; overflow-x: auto; padding: 4px 4px 16px;
+    scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent;
+  }
+  .persona-strip::-webkit-scrollbar { height: 7px; }
+  .persona-strip::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 8px; }
+  .persona-strip::-webkit-scrollbar-track { background: transparent; }
+  .strip-label {
+    flex: none; scroll-snap-align: start; display: flex; align-items: center; writing-mode: vertical-rl; text-orientation: mixed;
+    font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.5px; color: var(--text-muted);
+    text-transform: uppercase; padding-right: 10px; border-right: 1px solid var(--border-strong); margin-right: 2px;
+  }
+  .strip-label:not(:first-child) { margin-left: 8px; }
+  .persona {
+    flex: none; scroll-snap-align: start; display: flex; flex-direction: column; gap: 4px;
+    width: 164px; padding: 14px; border-radius: 10px; background: var(--card); border: 1px solid var(--border); text-align: left;
+  }
+  .persona-name-row { display: flex; align-items: center; gap: 6px; }
+  .persona-name-row .dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+  .persona .name { font-family: var(--mono); font-weight: 600; font-size: 13.5px; }
+  .persona .nickname { font-size: 11px; color: var(--text-faint); font-style: italic; }
+  .persona p { font-size: 11.5px; line-height: 1.45; color: var(--text-muted); margin-top: 1px; }
+
+  /* SHOWCASE */
+  .showcase-caption { text-align: center; max-width: 640px; margin: 0 auto 32px; font-size: 14px; line-height: 1.6; color: var(--text-muted); }
+  .run-trail { display: flex; flex-direction: column; align-items: center; gap: 18px; max-width: 820px; margin: 0 auto; }
+  .run-trail .term { width: 100%; }
+  .run-trail .term-body { white-space: pre-wrap; word-break: break-word; }
+  .run-arrow { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12.5px; color: var(--text-faint); }
+  .run-arrow svg { flex: none; }
+  .run-arrow code { font-family: var(--mono); color: var(--text-muted); }
+  .output-tree { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .output-row { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .output-row:last-child { border-bottom: none; }
+  .output-row-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .output-name-group { display: flex; align-items: center; gap: 9px; font-family: var(--mono); font-weight: 600; font-size: 14.5px; color: var(--text); }
+  .output-name-group svg { color: var(--accent); flex: none; }
+  .output-glyph { display: inline-flex; align-items: center; justify-content: center; width: 16px; font-family: var(--mono); font-size: 13px; color: var(--accent); flex: none; }
+  .output-badge {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 5px; flex: none;
+  }
+  .output-badge.primary { background: color-mix(in oklch, var(--accent) 16%, white); color: var(--accent); }
+  .output-badge.count { background: oklch(0.9 0.06 150); color: oklch(0.4 0.12 150); }
+  .output-desc { font-size: 13px; line-height: 1.55; color: var(--text-muted); margin: 6px 0 0; padding-left: 25px; }
+  .output-code {
+    margin: 10px 0 0; padding-left: 25px; font-family: var(--mono); font-size: 11.5px; line-height: 1.6;
+    color: oklch(0.3 0.01 90); overflow-x: auto; white-space: pre;
+  }
+  .tok-kw { color: var(--accent); }
+  .tok-str { color: oklch(0.5 0.15 150); }
+  .tok-fn { color: oklch(0.5 0.14 230); }
+
+  /* FOOTER */
+  footer {
+    background: var(--dark); color: var(--dark-text); padding: 56px 40px 40px;
+  }
+  .footer-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; max-width: 1160px; margin: 0 auto; }
+  .footer-brand { display: flex; flex-direction: column; gap: 10px; }
+  .footer-brand .logo { color: var(--dark-text); }
+  .footer-tagline { font-size: 14px; color: var(--dark-muted); }
+  .footer-links { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+  .footer-links a { color: oklch(0.85 0.005 90); font-size: 14px; }
+  .footer-links a:hover { color: var(--dark-text); }
+  .footer-license { font-size: 14px; color: var(--dark-muted); }
+  .footer-bottom {
+    max-width: 1160px; margin: 28px auto 0; padding-top: 20px; border-top: 1px solid var(--dark-border);
+    font-size: 13px; color: var(--dark-faint);
+  }
+
+  @media (max-width: 860px) {
+    .hero { padding: 56px 24px; }
+    .hero h1 { font-size: 42px; }
+    .nav { padding: 20px 24px; }
+    .nav-links { gap: 16px; }
+    .nav-link span { display: none; }
+    .section { padding: 64px 24px; }
+    .flow { gap: 32px 20px; }
+    .flow-arrow { display: none; }
+  }
+  @media (max-width: 480px) {
+    .hero h1 { font-size: 34px; }
+    .section-head h2 { font-size: 28px; }
+    .cmd-box { flex-direction: column; align-items: stretch; padding: 12px 14px; }
+    .copy-btn { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="logo" href="#"><span class="dot"></span>appwalk</a>
+  <div class="nav-links">
+    <a class="nav-link" href="https://github.com/kubstack/appwalk" target="_blank" rel="noopener">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+      <span>GitHub</span>
+    </a>
+    <a class="nav-link" href="https://www.npmjs.com/package/@kubstack/appwalk" target="_blank" rel="noopener">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <span>npm</span>
+    </a>
+    <button class="btn btn-accent" onclick="document.getElementById('quickstart').scrollIntoView({behavior:'smooth'})">Try it now</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-copy" id="quickstart">
+    <div class="eyebrow">Open source CLI</div>
+    <h1>AI explores.<br>Playwright <mark>verifies.</mark></h1>
+    <p class="lead">appwalk sends an AI through your app like a real user, then keeps only the flows that survive a clean, deterministic replay.</p>
+    <div class="cmd-box">
+      <code id="cmd-text">npx @kubstack/appwalk run &lt;url&gt; --provider openai --model gpt-4o</code>
+      <button class="copy-btn" id="copy-btn" onclick="copyCmd()" aria-label="Copy command">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span id="copy-label">Copy</span>
+      </button>
+    </div>
+    <div class="cta-note">Needs Node 24+, a Playwright browser, and an API key for your provider &mdash; <a href="https://github.com/kubstack/appwalk/blob/main/docs/getting-started.md" target="_blank" rel="noopener">2-minute setup</a></div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="section-head">
+    <div class="eyebrow">How it works</div>
+    <h2>Verification is the whole point.</h2>
+  </div>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      </div>
+      <h3>Point it at your app</h3>
+      <p>Give appwalk a URL, a provider, and a model. Add a persona, scope, or expectation only when you want to focus the run.</p>
+    </div>
+    <svg class="flow-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    <div class="flow-step">
+      <div class="flow-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+      </div>
+      <h3>Browser exploration</h3>
+      <p>An AI drives a real browser like a first-time user, or any persona you pick.</p>
+    </div>
+    <svg class="flow-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    <div class="flow-step">
+      <div class="flow-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </div>
+      <h3>Replay in a clean session</h3>
+      <p>Every discovered flow runs again, deterministically, from a blank slate.</p>
+    </div>
+    <svg class="flow-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    <div class="flow-step">
+      <div class="flow-icon done">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <h3>Verified Playwright test</h3>
+      <p>Only flows that survive replay become a spec you can run without AI.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <div class="eyebrow">Why appwalk</div>
+    <h2>Coverage without the manual grind</h2>
+  </div>
+  <div class="benefits">
+    <div class="benefit">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      <h3>Start fast</h3>
+      <p>Get E2E coverage going for an app that has little or none today.</p>
+    </div>
+    <div class="benefit">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      <h3>Cover new features</h3>
+      <p>Turn a newly shipped feature into a regression test without writing the first journey by hand.</p>
+    </div>
+    <div class="benefit">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <h3>Probe the edges</h3>
+      <p>Check accessibility, validation, permissions, and race conditions with focused personas.</p>
+    </div>
+    <div class="benefit">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      <h3>No AI at runtime</h3>
+      <p>Once verified, the generated test runs like any other Playwright spec &mdash; no model, no key.</p>
+    </div>
+    <div class="benefit">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <h3>Fits your suite</h3>
+      <p>Results land in your existing Playwright project. No new runner, no new format.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="section-head">
+    <div class="eyebrow">Personas</div>
+    <h2>Pick a lens. appwalk explores through it.</h2>
+  </div>
+  <div class="persona-legend">
+    <span class="legend-item"><span class="dot dot-journey"></span>journey &mdash; a normal flow; verified flows become coverage</span>
+    <span class="legend-item"><span class="dot dot-challenge"></span>challenge &mdash; a boundary check; becomes coverage or a finding</span>
+  </div>
+  <div class="persona-strip-wrap">
+    <div class="persona-strip">
+
+      <div class="strip-label">Everyday users</div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">noah</span></div><span class="nickname">The Newcomer</span><p>First-time visitor takes the most direct, obvious path.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">wade</span></div><span class="nickname">The Wanderer</span><p>Clicks around and backtracks, but still completes the flow.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">rosa</span></div><span class="nickname">The Regular</span><p>Returning user checks history, drafts, and saved state.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">mia</span></div><span class="nickname">The Mobile Baseline</span><p>Real phone profile; sweeps flows for layout and reachability.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">kai</span></div><span class="nickname">The Keyboard-only</span><p>Completes a flow using only the keyboard, never a click.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">hana</span></div><span class="nickname">The Hoverless</span><p>Checks hover-only content is reachable without hovering.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">priya</span></div><span class="nickname">The Polyglot</span><p>Enters non-Latin scripts, right-to-left text, locale formats.</p></div>
+
+      <div class="strip-label">Stateful flows</div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">blake</span></div><span class="nickname">The Backtracker</span><p>Back/forward/reload mid-flow, checks what survived.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">tara</span></div><span class="nickname">The Tweaker</span><p>Changes an earlier choice, checks downstream updates.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">eli</span></div><span class="nickname">The Expirer</span><p>Clears cookies mid-flow to simulate an expired session.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">casey</span></div><span class="nickname">The Canceller</span><p>Cancels, deletes, or unsubscribes, then verifies it took effect.</p></div>
+
+      <div class="strip-label">Scale &amp; perf</div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">max</span></div><span class="nickname">The Maximalist</span><p>Pushes long text and large data sets looking for broken layout.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">lena</span></div><span class="nickname">The Laggard</span><p>Injects network latency, checks for duplicate submissions.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-journey"></span><span class="name">ezra</span></div><span class="nickname">The Exporter</span><p>Triggers a real export and confirms a real file was produced.</p></div>
+
+      <div class="strip-label">Data integrity</div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-challenge"></span><span class="name">freddie</span></div><span class="nickname">The Form Breaker</span><p>Submits invalid or hostile values, records what got through.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-challenge"></span><span class="name">dana</span></div><span class="nickname">The Duplicator</span><p>Creates the same thing twice, checks for duplicate detection.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-challenge"></span><span class="name">uma</span></div><span class="nickname">The Uploader</span><p>Uploads wrong-type, empty, or oversized files.</p></div>
+
+      <div class="strip-label">Access control</div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-challenge"></span><span class="name">owen</span></div><span class="nickname">The Outsider</span><p>Never logs in, tries to reach protected pages directly.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-challenge"></span><span class="name">iris</span></div><span class="nickname">The ID Swapper</span><p>Tries a neighboring resource ID or an unlinked admin URL.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-challenge"></span><span class="name">gail</span></div><span class="nickname">The Gatecrasher</span><p>Tries to reach a plan-gated or quota-limited feature directly.</p></div>
+
+      <div class="strip-label">Concurrency</div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-challenge"></span><span class="name">riley</span></div><span class="nickname">The Rusher</span><p>Fires the same action rapidly, checks for duplicate submission.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-challenge"></span><span class="name">talia</span></div><span class="nickname">The Two-Tabber</span><p>Edits the same record from two open tabs at once.</p></div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-challenge"></span><span class="name">della</span></div><span class="nickname">The Decliner</span><p>Backs out at the last moment, checks nothing was committed.</p></div>
+
+      <div class="strip-label">Resilience</div>
+      <div class="persona"><div class="persona-name-row"><span class="dot dot-challenge"></span><span class="name">gabe</span></div><span class="nickname">The Glitch</span><p>Injects a network failure, checks the app recovers cleanly.</p></div>
+
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <div class="eyebrow">See it run</div>
+    <h2>What a run actually leaves behind</h2>
+  </div>
+  <p class="showcase-caption">Not just a test file &mdash; a full run leaves a human-facing report, raw evidence, and machine-readable data behind. The spec is generated only for flows that passed deterministic replay.</p>
+  <div class="run-trail">
+    <div class="term">
+      <div class="term-titlebar">
+        <div class="term-dots">
+          <span style="background: oklch(0.75 0.06 25);"></span>
+          <span style="background: oklch(0.75 0.08 80);"></span>
+          <span style="background: oklch(0.75 0.1 150);"></span>
+        </div>
+      </div>
+      <div class="term-body" style="font-size: 13.5px;">
+        <div><span class="term-prompt">$</span> npx @kubstack/appwalk run https://your-app.example --provider anthropic --model claude-opus-5 --persona noah</div>
+        <div class="term-dim">[noah] Exploring application</div>
+        <div class="term-dim">[noah] Exploration completed: 3 flow(s) found</div>
+        <div class="term-dim">[noah] Verifying 3 of 3 discovered flow(s) by replay in a clean session</div>
+        <div class="term-ok">[noah] Flow 1 replay confirmed</div>
+        <div class="term-ok">[noah] Flow 2 replay confirmed</div>
+        <div class="term-warn">[noah] Flow 3 not confirmed: expected result was not reproduced</div>
+        <div class="term-dim">[noah] Generating test suite</div>
+      </div>
+    </div>
+
+    <div class="run-arrow">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+      writes to <code>appwalk-output/&lt;run-id&gt;/</code>
+    </div>
+
+    <div class="output-tree">
+      <div class="output-row">
+        <div class="output-row-top">
+          <span class="output-name-group">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            report.html
+          </span>
+          <span class="output-badge primary">open first</span>
+        </div>
+        <p class="output-desc">The human-facing summary &mdash; flows found, replay results, and any findings.</p>
+      </div>
+
+      <div class="output-row">
+        <div class="output-row-top">
+          <span class="output-name-group">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            discovered.spec.ts
+          </span>
+          <span class="output-badge count">2 flows</span>
+        </div>
+        <p class="output-desc">Generated only for replay-confirmed flows &mdash; an ordinary Playwright test that runs without AI.</p>
+        <pre class="output-code"><code><span class="tok-fn">test</span>(<span class="tok-str">'Checkout: place an order'</span>, <span class="tok-kw">async</span> ({ page }) =&gt; {
+  <span class="tok-kw">await</span> page.goto(<span class="tok-str">'https://your-app.example'</span>);
+  <span class="tok-kw">await</span> page.getByRole(<span class="tok-str">'button'</span>, { name: <span class="tok-str">'Place order'</span> }).click();
+  <span class="tok-kw">await</span> <span class="tok-fn">expect</span>(page.getByRole(<span class="tok-str">'heading'</span>, { name: <span class="tok-str">'Order confirmed'</span> })).toBeVisible();
+});</code></pre>
+      </div>
+
+      <div class="output-row">
+        <div class="output-row-top">
+          <span class="output-name-group"><span class="output-glyph">{ }</span>report.json</span>
+        </div>
+        <p class="output-desc">The same data as the HTML report, for CI and tooling.</p>
+      </div>
+
+      <div class="output-row">
+        <div class="output-row-top">
+          <span class="output-name-group">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            evidence/
+          </span>
+        </div>
+        <p class="output-desc">Screenshots and traces captured for each step.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <a class="logo" href="#"><span class="dot" style="background: oklch(0.65 0.19 300);"></span>appwalk</a>
+      <div class="footer-tagline">Open-source CLI. MIT licensed.</div>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/kubstack/appwalk" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.npmjs.com/package/@kubstack/appwalk" target="_blank" rel="noopener">npm</a>
+      <a href="https://github.com/kubstack/appwalk/tree/main/docs" target="_blank" rel="noopener">Docs</a>
+      <span class="footer-license">License: MIT</span>
+    </div>
+  </div>
+  <div class="footer-bottom">Built by Jakub Mareš</div>
+</footer>
+
+<script>
+  function copyCmd() {
+    var text = document.getElementById('cmd-text').textContent;
+    navigator.clipboard.writeText(text).then(function () {
+      var label = document.getElementById('copy-label');
+      var original = label.textContent;
+      label.textContent = 'Copied!';
+      setTimeout(function () { label.textContent = original; }, 1500);
+    });
+  }
+
+  (function () {
+    var strip = document.querySelector('.persona-strip');
+    var wrap = document.querySelector('.persona-strip-wrap');
+    if (!strip || !wrap) return;
+    strip.scrollLeft = 0;
+    function updateFades() {
+      var atEnd = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 4;
+      wrap.classList.toggle('scrolled-end', atEnd);
+    }
+    strip.addEventListener('scroll', updateFades, { passive: true });
+    window.addEventListener('resize', updateFades);
+    updateFades();
+  })();
+</script>
+
+</body>
+</html>
