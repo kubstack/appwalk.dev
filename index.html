@@ -53,8 +53,12 @@
   }
   .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; letter-spacing: -0.3px; }
   .logo .dot { width: 10px; height: 10px; background: var(--accent); flex: none; }
-  .nav-links { display: flex; align-items: center; gap: 28px; }
-  .nav-link { display: flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 500; }
+  .nav-links { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; row-gap: 10px; justify-content: flex-end; }
+  .nav-link { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 500; }
+  .npm-version {
+    font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-faint);
+    background: var(--bg-alt); border: 1px solid var(--border); border-radius: 5px; padding: 2px 6px;
+  }
   .btn {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 12px 22px; border-radius: 8px; font-size: 14px; font-weight: 600;
@@ -129,17 +133,22 @@
   /* HOW IT WORKS */
   .flow {
     display: flex; align-items: flex-start; justify-content: center; gap: 24px;
-    max-width: 1160px; margin: 0 auto; flex-wrap: wrap;
+    max-width: 1160px; margin: 0 auto;
   }
-  .flow-step { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 220px; text-align: center; }
+  .flow-step { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; flex: 1 1 0; min-width: 0; text-align: center; }
+  .flow-step:not(:last-child)::after {
+    content: ""; position: absolute; top: 30px; left: 50%; width: 100%; height: 2px;
+    background: var(--border-strong); z-index: 0;
+  }
   .flow-icon {
+    position: relative; z-index: 1;
     width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
     background: var(--card); border: 1px solid var(--border-strong); color: var(--accent); flex: none;
   }
   .flow-icon.done { background: color-mix(in oklch, var(--green) 20%, white); border-color: transparent; color: oklch(0.4 0.12 150); }
   .flow-step h3 { font-size: 17px; font-weight: 600; }
   .flow-step p { font-size: 14px; line-height: 1.55; color: var(--text-muted); }
-  .flow-arrow { color: oklch(0.6 0.01 90); flex: none; margin-top: 24px; }
+  .flow-text { display: contents; }
 
   /* WHY */
   .benefits {
@@ -236,17 +245,28 @@
   @media (max-width: 860px) {
     .hero { padding: 56px 24px; }
     .hero h1 { font-size: 42px; }
-    .nav { padding: 20px 24px; }
-    .nav-links { gap: 16px; }
-    .nav-link span { display: none; }
+    .nav { padding: 20px 24px; flex-wrap: wrap; row-gap: 12px; }
+    .nav-links { gap: 14px; }
     .section { padding: 64px 24px; }
-    .flow { gap: 32px 20px; }
-    .flow-arrow { display: none; }
+
+    .flow { flex-direction: column; align-items: flex-start; gap: 0; max-width: 480px; margin: 0 auto; }
+    .flow-step { flex-direction: row; align-items: flex-start; text-align: left; width: 100%; gap: 18px; padding: 22px 0; }
+    .flow-step:first-child { padding-top: 0; }
+    .flow-step:last-child { padding-bottom: 0; }
+    .flow-step::after { display: none; }
+    .flow-step:not(:last-child) .flow-icon::after {
+      content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      width: 2px; height: 44px; background: var(--border-strong);
+    }
+    .flow-text { display: flex; flex-direction: column; gap: 6px; padding-top: 6px; }
   }
   @media (max-width: 480px) {
-    .nav { padding: 16px; gap: 12px; }
+    .nav { padding: 16px; gap: 12px; flex-wrap: wrap; }
     .logo { font-size: 18px; }
-    .nav-links { gap: 10px; }
+    .nav-links { gap: 10px; width: 100%; justify-content: flex-start; }
+    .nav-link { font-size: 14px; gap: 6px; }
+    .nav-link svg { width: 16px; height: 16px; }
+    .npm-version { display: none; }
     .nav .btn-accent { padding: 9px 11px; font-size: 12px; white-space: nowrap; }
 
     .hero { padding: 48px 16px 56px; gap: 20px; }
@@ -259,10 +279,12 @@
     .section { padding: 56px 16px; }
     .section-head { margin-bottom: 32px; }
     .section-head h2 { font-size: clamp(26px, 8vw, 32px); line-height: 1.15; }
-    .flow-step { width: min(100%, 280px); }
 
     .benefits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; }
     .benefit { width: auto; }
+    .benefit:last-child:nth-child(odd) {
+      grid-column: 1 / -1; max-width: 280px; margin: 0 auto;
+    }
 
     .persona-legend { justify-content: flex-start; gap: 16px; }
     .legend-item { align-items: flex-start; font-size: 12px; line-height: 1.4; }
@@ -287,19 +309,20 @@
   <a class="logo" href="#"><span class="dot"></span>appwalk</a>
   <div class="nav-links">
     <a class="nav-link" href="https://github.com/kubstack/appwalk" target="_blank" rel="noopener">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
       <span>GitHub</span>
     </a>
     <a class="nav-link" href="https://www.npmjs.com/package/@kubstack/appwalk" target="_blank" rel="noopener">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
       <span>npm</span>
+      <span id="npm-version" class="npm-version" hidden></span>
     </a>
-    <button class="btn btn-accent" onclick="document.getElementById('quickstart').scrollIntoView({behavior:'smooth'})">Try it now</button>
+    <a class="btn btn-accent" href="https://github.com/kubstack/appwalk/blob/main/docs/getting-started.md" target="_blank" rel="noopener">Try it now</a>
   </div>
 </nav>
 
 <section class="hero">
-  <div class="hero-copy" id="quickstart">
+  <div class="hero-copy">
     <div class="eyebrow">Open source CLI</div>
     <h1>AI explores.<br>Playwright <mark>verifies.</mark></h1>
     <p class="lead">appwalk sends an AI through your app like a real user, then keeps only the flows that survive a clean, deterministic replay.</p>
@@ -324,32 +347,37 @@
       <div class="flow-icon">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
       </div>
-      <h3>Point it at your app</h3>
-      <p>Give appwalk a URL, a provider, and a model. Add a persona, scope, or expectation only when you want to focus the run.</p>
+      <div class="flow-text">
+        <h3>Point it at your app</h3>
+        <p>Give appwalk a URL, a provider, and a model. Add a persona, scope, or expectation only when you want to focus the run.</p>
+      </div>
     </div>
-    <svg class="flow-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     <div class="flow-step">
       <div class="flow-icon">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
       </div>
-      <h3>Browser exploration</h3>
-      <p>An AI drives a real browser like a first-time user, or any persona you pick.</p>
+      <div class="flow-text">
+        <h3>Browser exploration</h3>
+        <p>An AI drives a real browser like a first-time user, or any persona you pick.</p>
+      </div>
     </div>
-    <svg class="flow-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     <div class="flow-step">
       <div class="flow-icon">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
       </div>
-      <h3>Replay in a clean session</h3>
-      <p>Every discovered flow runs again, deterministically, from a blank slate.</p>
+      <div class="flow-text">
+        <h3>Replay in a clean session</h3>
+        <p>Every discovered flow runs again, deterministically, from a blank slate.</p>
+      </div>
     </div>
-    <svg class="flow-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     <div class="flow-step">
       <div class="flow-icon done">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       </div>
-      <h3>Verified Playwright test</h3>
-      <p>Only flows that survive replay become a spec you can run without AI.</p>
+      <div class="flow-text">
+        <h3>Verified Playwright test</h3>
+        <p>Only flows that survive replay become a spec you can run without AI.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -539,6 +567,19 @@
 </footer>
 
 <script>
+  (function () {
+    var badge = document.getElementById('npm-version');
+    if (!badge) return;
+    fetch('https://registry.npmjs.org/@kubstack/appwalk/latest')
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (data) {
+        if (!data || !data.version) return;
+        badge.textContent = 'v' + data.version;
+        badge.hidden = false;
+      })
+      .catch(function () {});
+  })();
+
   function copyCmd() {
     var text = document.getElementById('cmd-text').textContent;
     navigator.clipboard.writeText(text).then(function () {
